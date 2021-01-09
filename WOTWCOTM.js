@@ -77,10 +77,32 @@ class player extends aSprite {
 	}
 }
 
+class button extends aSprite{
+	setTag(_tag) {
+		this.tag = _tag;
+	}
+	
+	pressed() {
+		switch (this.tag) {
+			case "start":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
+				gameState = gameStates.INGAME;
+			}
+			break;
+			
+			default:
+			console.log("BUTTON ERROR");
+			break;
+		}
+	}
+}
+
 // game objects
 var bckgrnd;
 var fightingMachine;
 var playerHealth = [];
+var mainMenu;
+var startButton;
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
@@ -127,6 +149,10 @@ function init(){
         document.addEventListener("touchcancel", touchUp, false);
 		
 		bckgrnd = new background(0, 0, ASSET_PATH + "Background.png", 0, 50, canvas.width, canvas.height);
+		mainMenu = new background(0, 0, ASSET_PATH + "startScreen.png", 0, 0, canvas.width, canvas.height);
+		
+		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
+		startButton.setTag("start");
 		
 		fightingMachine = new player(canvas.width/2 - 30, 90, ASSET_PATH + "FightingMachine.png", 0, 0, 60, 60);
 		fightingMachine.initPlayer();
@@ -142,33 +168,33 @@ function init(){
 
 function gameLoop(){
 	delta = (Date.now() - frameTime)/1000;
-	switch(gameState)
-	case gameStates.MAINMENU:
+	switch(gameState){
+		case gameStates.MAINMENU:
+		renderMainMenu();
+		break;
 	
-	break;
+		case gameStates.INGAME:
+		update(delta);
+		render(delta);
+		frameTime = Date.now();
+		break;
 	
-	case gameStates.INGAME:
-	update(delta);
-	render(delta);
-	frameTime = Date.now();
-	break;
+		case gameStates.BOSSSTAGE:
 	
-	case gameStates.BOSSSTAGE:
+		break;
 	
-	break;
+		case gameStates.GAMEOVER:
 	
-	case gameStates.GAMEOVER:
+		break;
 	
-	break;
+		case gameStates.WINSCREEN:
 	
-	case gameStates.WINSCREEN:
+		break;
 	
-	break;
-	
-	default:
-	console.log("LOOP ERROR");
-	break;
-	
+		default:
+		console.log("LOOP ERROR");
+		break;
+	}
 	requestAnimationFrame(gameLoop);
 }
 
@@ -198,8 +224,25 @@ function renderHeatRay(){
 	}
 }
 
+function renderMainMenu(){
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+	mainMenu.render();
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
+	canvasContext.fillText("The War of the Worlds", 20, 10);
+	canvasContext.fillText("The Coming of the Martians", 20, 30);
+	startButton.render();
+	canvasContext.fillText("Start", startButton.getX() + 10, startButton.getY() + 15.5);
+}
+
 function update(_delta){
 
+}
+
+function styleText (_colour, _font, _Align, _baseline) {
+	canvasContext.fillStyle = _colour;
+	canvasContext.font = _font;
+	canvasContext.textAlign = _Align;
+	canvasContext.textBaseline = _baseline;
 }
 
 function touchUp(evt){
@@ -214,6 +257,12 @@ function touchDown(evt){
 	mouseX = canvas.relMouseCoords(evt).x;
 	mouseY = canvas.relMouseCoords(evt).y;
 	
+	switch(gameState) {
+		case gameStates.MAINMENU:
+		console.log("HERE");
+		startButton.pressed();
+		break;
+	}
     touchXY(evt);
 }
 
