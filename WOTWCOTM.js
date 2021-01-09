@@ -86,6 +86,7 @@ class button extends aSprite{
 		switch (this.tag) {
 			case "start":
 			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
+				humanInitSpawnTime = Date.now();
 				gameState = gameStates.INGAME;
 			}
 			break;
@@ -97,15 +98,51 @@ class button extends aSprite{
 	}
 }
 
+class enemy extends aSprite{
+	setTag(_tag) {
+		this.tag = _tag;
+	}
+	
+	setType(_type) {
+		this.type = _type;
+	}
+	
+	die() {
+		switch (this.type) {
+			case "human":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H && mouseY < 90){
+				score += 5;
+				this.x = -Infinity;
+				this.y = -Infinity;
+				this.vX = 0;
+				this.vY = 0;
+			}
+		}
+	}
+}
+
+class human extends enemy {
+	setYVel(){
+		var direction = Math.round((Math.random()* 2) + 1);
+		if (direction == 1) {
+			this.vY = Math.random() - 0.5;
+		} else {
+			this.vY =((Math.random() - 0.5) * -1);
+		}
+	}
+}
+
 // game objects
 var bckgrnd;
 var fightingMachine;
 var playerHealth = [];
 var mainMenu;
 var startButton;
+var humans = [];
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
+var HUMAN_SPRITE_PATH = "Sprites/Humans/humansSkin"
 
 //game variables
 var frameTime;
@@ -115,6 +152,10 @@ var mouseX;
 var mouseY;
 var heatRay = false;
 var lastPt = {x: 0, y: 0};
+var humanInitSpawnTime = 0;
+var humanCounter = 0;
+var score = 0;
+var numSkins = 4;
 
 var gameStates = {
 	MAINMENU: 0,
@@ -207,6 +248,9 @@ function render(_delta) {
 	}
 	bckgrnd.scrollDwn(travel);
 	
+	for (var i = 0; i < humans.length; i++){
+		humans[i].render();
+	}
 	renderHeatRay();
 	fightingMachine.render();
 	fightingMachine.renderHealth();
@@ -235,7 +279,35 @@ function renderMainMenu(){
 }
 
 function update(_delta){
+	humanCounter = (Date.now() - humanInitSpawnTime)/1000;
+	if(humanCounter >= 0.75){
+		
+		var side = Math.round((Math.random() * 2) + 1);
+		var skin = Math.round(Math.random() * numSkins + 1);
+		while (skin < 1 || skin > numSkins) {
+			skin = Math.round(Math.random() * numSkins + 1);
+		}
 
+		
+		if(side == 1){
+			humans.push(new human(-10, (Math.random() * 90) + 1, HUMAN_SPRITE_PATH + skin.toString() + ".png", 0.5, 0, 10, 10));
+		} else {
+			humans.push(new human(canvas.width + 10, (Math.random() * 90) + 1, HUMAN_SPRITE_PATH + skin.toString() + ".png", -0.5, 0, 10, 10));
+		}
+		
+		humans[humans.length - 1].setType("human");
+		humans[humans.length - 1].setTag("h" + humans.length);
+		humans[humans.length - 1].setYVel();
+		
+		humanCounter = 0;
+		humanInitSpawnTime = Date.now();
+	}
+	
+	
+	for(var i = 0; i < humans.length; i++){
+		humans[i].x += humans[i].vX;
+		humans[i].y += humans[i].vY;
+	}
 }
 
 function styleText (_colour, _font, _Align, _baseline) {
@@ -257,9 +329,11 @@ function touchDown(evt){
 	mouseX = canvas.relMouseCoords(evt).x;
 	mouseY = canvas.relMouseCoords(evt).y;
 	
+	for(var i = 0; i < humans.length; i++) {
+		humans[i].die();
+	}
 	switch(gameState) {
 		case gameStates.MAINMENU:
-		console.log("HERE");
 		startButton.pressed();
 		break;
 	}
