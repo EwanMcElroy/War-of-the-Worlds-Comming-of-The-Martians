@@ -87,6 +87,7 @@ class button extends aSprite{
 			case "start":
 			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
 				humanInitSpawnTime = Date.now();
+				artilleryInitSpawnTime = Date.now();
 				gameState = gameStates.INGAME;
 			}
 			break;
@@ -132,6 +133,49 @@ class human extends enemy {
 	}
 }
 
+class artilleryClass extends enemy {
+	initArtillery(){
+		this.moving = true;
+		this.ammo = [];
+		this.shootTimeStart = Date.now();
+		this.shootTimer = 0;
+		this.health = 3;
+	}
+	
+	stopMoving() {
+		if(this.y > 60) {
+			this.vY = 0;
+			this.moving = false;
+		}
+	}
+	
+	renderShootBar() {
+		canvasContext.fillStyle = 'Red';
+		canvasContext.fillRect(this.getX(), this.getY() - 10, this.shootTimer * 5, 2.5);
+	}
+
+	shootCalc() {
+		this.shootTimer = (Date.now() - this.shootTimeStart)/1000;
+		if(this.shootTimer > 3 && !this.moving){
+			var xVel = 0;
+			switch(this.x){
+				case 75:
+				xVel = 0.5;
+				break;
+				case 75 * 2:
+				xVel = 0;
+				break;
+				case 75 * 3:
+				xVel = -0.5;
+				break;
+			}
+			ammo.push(new aSprite(this.getx(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10));
+			this.shootTimer = 0;
+			this.shootTimeStart = Date.now();
+		}
+	}
+}
+
 // game objects
 var bckgrnd;
 var fightingMachine;
@@ -139,6 +183,7 @@ var playerHealth = [];
 var mainMenu;
 var startButton;
 var humans = [];
+var artillery = [];
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
@@ -156,6 +201,8 @@ var humanInitSpawnTime = 0;
 var humanCounter = 0;
 var score = 0;
 var numSkins = 4;
+var artilleryInitSpawnTime = 0;
+var artilleryCounter = 0;
 
 var gameStates = {
 	MAINMENU: 0,
@@ -248,6 +295,13 @@ function render(_delta) {
 	}
 	bckgrnd.scrollDwn(travel);
 	
+	for(var i = 0; i < artillery.length; i++){
+		artillery[i].render();
+		artillery[i].renderShootBar();
+		for(var j = 0; j < artillery[i].ammo[j].length; j++) {
+			artillery[i].ammo[j].render();
+		}
+	}
 	for (var i = 0; i < humans.length; i++){
 		humans[i].render();
 	}
@@ -280,6 +334,7 @@ function renderMainMenu(){
 
 function update(_delta){
 	humanCounter = (Date.now() - humanInitSpawnTime)/1000;
+	artilleryCounter = (Date.now() - artilleryInitSpawnTime)/1000;
 	if(humanCounter >= 0.75){
 		
 		var side = Math.round((Math.random() * 2) + 1);
@@ -301,6 +356,31 @@ function update(_delta){
 		
 		humanCounter = 0;
 		humanInitSpawnTime = Date.now();
+	}
+	
+	if(artilleryCounter >= 5) {
+
+		for(var i = 1; i < 4; i++){
+			artillery.push(new artilleryClass(i * 75, -10, ASSET_PATH + "artillery.png", 0, 0.5, 20, 15));
+			artillery[artillery.length - 1].initArtillery();
+			artillery[artillery.length - 1].setType("artillery");
+			artillery[artillery.length - 1].setTag("a" + artillery.length);
+		}
+		
+		artilleryCounter = 0;
+		artilleryInitSpawnTime = Date.now();
+	}
+	
+	for(var i = 0; i < artillery.length; i++){
+		artillery[i].y += artillery[i].vY;
+		artillery[i].stopMoving();
+		artillery[i].shootCalc();
+		if(artillery[i].ammo[0] != null) {
+			for(var j = 0; j < artillery[i].ammo[j].length; j++){
+				artillery[i].ammo[j].y += artillery[i].ammo[j].vY;
+				artillery[i].ammo[j].x += artillery[i].ammo[j].vX;			
+			}			
+		}
 	}
 	
 	
