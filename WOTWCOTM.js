@@ -49,7 +49,7 @@ class aSprite {
     }
 	
 	distance(_obj){
-		if(Math.sqrt(((this.x - _obj.x) * (this.x - _obj.x)) + ((this.y - _obj.y) * (this.y - _obj.y)))){
+		if(_obj.x - 5 > this.getX() && _obj.y < this.getX() + this.W && _obj.y > this.getY() && _obj.y + 5 < this.getY() + this.H){
 			return true;
 		} else { return false;}
 	}
@@ -88,6 +88,8 @@ class button extends aSprite{
 			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
 				humanInitSpawnTime = Date.now();
 				artilleryInitSpawnTime = Date.now();
+				diseaseInitTimer = Date.now();
+				fightingMachine.health = 3;
 				gameState = gameStates.INGAME;
 			}
 			break;
@@ -118,6 +120,18 @@ class enemy extends aSprite{
 				this.vX = 0;
 				this.vY = 0;
 			}
+			break;
+			case "artillery":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H && mouseY < 90){
+				this.health--;
+				if(this.health <= 0){
+					score += 15;
+					this.x = -Infinity;
+					this.y = -Infinity;
+					this.vX = 0;
+					this.vY = 0;
+				}
+			}
 		}
 	}
 }
@@ -136,7 +150,6 @@ class human extends enemy {
 class artilleryClass extends enemy {
 	initArtillery(){
 		this.moving = true;
-		this.ammo = [];
 		this.shootTimeStart = Date.now();
 		this.shootTimer = 0;
 		this.health = 3;
@@ -166,10 +179,10 @@ class artilleryClass extends enemy {
 				xVel = 0;
 				break;
 				case 75 * 3:
-				xVel = -0.5;
+				xVel = -0.75;
 				break;
 			}
-			ammo.push(new aSprite(this.getx(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10));
+			bullets.push(new aSprite(this.getX(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10));
 			this.shootTimer = 0;
 			this.shootTimeStart = Date.now();
 		}
@@ -184,6 +197,9 @@ var mainMenu;
 var startButton;
 var humans = [];
 var artillery = [];
+var bullets = [];
+var gameOverScreen;
+var causeOfDeath = "disease";
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
@@ -203,6 +219,8 @@ var score = 0;
 var numSkins = 4;
 var artilleryInitSpawnTime = 0;
 var artilleryCounter = 0;
+var diseaseInitTimer = 0;
+var diseaseCounter = 0;
 
 var gameStates = {
 	MAINMENU: 0,
@@ -238,6 +256,7 @@ function init(){
 		
 		bckgrnd = new background(0, 0, ASSET_PATH + "Background.png", 0, 50, canvas.width, canvas.height);
 		mainMenu = new background(0, 0, ASSET_PATH + "startScreen.png", 0, 0, canvas.width, canvas.height);
+		gameOverScreen = new background(0, 0, ASSET_PATH + "gameOver.png", 0, 0, canvas.width, canvas.height);
 		
 		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		startButton.setTag("start");
@@ -265,6 +284,11 @@ function gameLoop(){
 		update(delta);
 		render(delta);
 		frameTime = Date.now();
+		diseaseCounter = (Date.now() - diseaseInitTimer)/1000;
+		if (diseaseCounter > 20) {
+			causeOfDeath = "disease";
+			gameState = gameStates.GAMEOVER;
+		}
 		break;
 	
 		case gameStates.BOSSSTAGE:
@@ -272,7 +296,10 @@ function gameLoop(){
 		break;
 	
 		case gameStates.GAMEOVER:
-	
+		humans.length = 0;
+		artillery.length = 0;
+		bullets.length = 0;
+		renderGameOver();
 		break;
 	
 		case gameStates.WINSCREEN:
@@ -298,9 +325,9 @@ function render(_delta) {
 	for(var i = 0; i < artillery.length; i++){
 		artillery[i].render();
 		artillery[i].renderShootBar();
-		for(var j = 0; j < artillery[i].ammo[j].length; j++) {
-			artillery[i].ammo[j].render();
-		}
+	}
+	for (var i = 0; i < bullets.length; i++) {
+		bullets[i].render();
 	}
 	for (var i = 0; i < humans.length; i++){
 		humans[i].render();
@@ -330,6 +357,18 @@ function renderMainMenu(){
 	canvasContext.fillText("The Coming of the Martians", 20, 30);
 	startButton.render();
 	canvasContext.fillText("Start", startButton.getX() + 10, startButton.getY() + 15.5);
+}
+
+function renderGameOver() {
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+	gameOverScreen.render();
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
+	canvasContext.fillText("Game Over", 20, 10);
+	canvasContext.fillText("You have been killed by", 20, 25);
+	canvasContext.fillText(causeOfDeath, 20, 40);
+	canvasContext.fillText("Score: " + score, 20, 55); 
+	startButton.render();
+	canvasContext.fillText("Replay", startButton.getX() + 5, startButton.getY() + 15.5);
 }
 
 function update(_delta){
@@ -373,16 +412,25 @@ function update(_delta){
 	
 	for(var i = 0; i < artillery.length; i++){
 		artillery[i].y += artillery[i].vY;
-		artillery[i].stopMoving();
+		artillery[i].stopMoving(); 
 		artillery[i].shootCalc();
-		if(artillery[i].ammo[0] != null) {
-			for(var j = 0; j < artillery[i].ammo[j].length; j++){
-				artillery[i].ammo[j].y += artillery[i].ammo[j].vY;
-				artillery[i].ammo[j].x += artillery[i].ammo[j].vX;			
-			}			
-		}
 	}
 	
+	for (var i = 0; i < bullets.length; i++) {
+		bullets[i].x += bullets[i].vX;
+		bullets[i].y += bullets[i].vY;
+		if(fightingMachine.distance(bullets[i])) {
+			fightingMachine.health--;
+			bullets[i].x = -Infinity;
+			bullets[i].y = -Infinity;
+			bullets[i].vX = 0;
+			bullets[i].vY = 0;
+			if(fightingMachine.health <= 0){
+				causeOfDeath = "artillery";
+				gameState = gameStates.GAMEOVER;
+			}
+		}
+	}
 	
 	for(var i = 0; i < humans.length; i++){
 		humans[i].x += humans[i].vX;
@@ -412,8 +460,14 @@ function touchDown(evt){
 	for(var i = 0; i < humans.length; i++) {
 		humans[i].die();
 	}
+	for(var i = 0; i < artillery.length; i++) {
+		artillery[i].die();
+	}
 	switch(gameState) {
 		case gameStates.MAINMENU:
+		startButton.pressed();
+		break;
+		case gameStates.GAMEOVER:
 		startButton.pressed();
 		break;
 	}
