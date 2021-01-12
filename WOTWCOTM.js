@@ -199,7 +199,7 @@ var humans = [];
 var artillery = [];
 var bullets = [];
 var gameOverScreen;
-var causeOfDeath = "disease";
+var thunderchildBay;
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
@@ -221,6 +221,7 @@ var artilleryInitSpawnTime = 0;
 var artilleryCounter = 0;
 var diseaseInitTimer = 0;
 var diseaseCounter = 0;
+var causeOfDeath = "disease";
 
 var gameStates = {
 	MAINMENU: 0,
@@ -257,6 +258,8 @@ function init(){
 		bckgrnd = new background(0, 0, ASSET_PATH + "Background.png", 0, 50, canvas.width, canvas.height);
 		mainMenu = new background(0, 0, ASSET_PATH + "startScreen.png", 0, 0, canvas.width, canvas.height);
 		gameOverScreen = new background(0, 0, ASSET_PATH + "gameOver.png", 0, 0, canvas.width, canvas.height);
+		thunderchildBay = new background(0, -canvas.height, ASSET_PATH + "thunderchildbay.png", 0, 0.5, canvas.width, canvas.height);
+		
 		
 		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		startButton.setTag("start");
@@ -289,10 +292,15 @@ function gameLoop(){
 			causeOfDeath = "disease";
 			gameState = gameStates.GAMEOVER;
 		}
+		if(score >= 25) {
+			gameState = gameStates.BOSSSTAGE;
+		}
 		break;
 	
 		case gameStates.BOSSSTAGE:
-	
+		frameTime = Date.now();
+		renderThunderchild(delta);
+		updateThunderchild(delta);
 		break;
 	
 		case gameStates.GAMEOVER:
@@ -371,6 +379,23 @@ function renderGameOver() {
 	canvasContext.fillText("Replay", startButton.getX() + 5, startButton.getY() + 15.5);
 }
 
+function renderThunderchild(_delta) {
+	travel += _delta * bckgrnd.vY;
+	if(travel > bckgrnd.H) {
+		travel = 0;
+	}
+	if(thunderchildBay.y <= -0.1) {
+		bckgrnd.scrollDwn(travel);
+	} else {
+		bckgrnd.render();
+	}
+	
+	thunderchildBay.render();
+	
+	renderHeatRay();
+	fightingMachine.render();
+}
+
 function update(_delta){
 	humanCounter = (Date.now() - humanInitSpawnTime)/1000;
 	artilleryCounter = (Date.now() - artilleryInitSpawnTime)/1000;
@@ -436,6 +461,14 @@ function update(_delta){
 		humans[i].x += humans[i].vX;
 		humans[i].y += humans[i].vY;
 	}
+}
+
+function updateThunderchild(_delta) {
+	if(thunderchildBay.y >= 0) {
+		thunderchildBay.vY = 0;
+	}
+	
+	thunderchildBay.y += thunderchildBay.vY;
 }
 
 function styleText (_colour, _font, _Align, _baseline) {
