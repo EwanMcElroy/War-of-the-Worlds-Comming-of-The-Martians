@@ -49,7 +49,7 @@ class aSprite {
     }
 	
 	distance(_obj){
-		if(_obj.x - 5 > this.getX() && _obj.y < this.getX() + this.W && _obj.y > this.getY() && _obj.y + 5 < this.getY() + this.H){
+		if(_obj.x + 20 > this.getX() && _obj.x < this.getX() - 20 + this.W && _obj.y > this.getY() && _obj.y + 5 < this.getY() + this.H){
 			return true;
 		} else { return false;}
 	}
@@ -90,6 +90,7 @@ class button extends aSprite{
 				artilleryInitSpawnTime = Date.now();
 				diseaseInitTimer = Date.now();
 				fightingMachine.health = 3;
+				score = 0;
 				gameState = gameStates.INGAME;
 			}
 			break;
@@ -131,6 +132,19 @@ class enemy extends aSprite{
 					this.vX = 0;
 					this.vY = 0;
 				}
+			}
+			case "boss":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H && mouseY < 90){
+				this.health--;
+				hmsThunderchild.updateStage();
+			}
+			break;
+			case "ammo":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H && mouseY < 90) {
+				this.x = -Infinity;
+				this.y = -Infinity;
+				this.vX = 0;
+				this.vY = 0;
 			}
 		}
 	}
@@ -189,6 +203,117 @@ class artilleryClass extends enemy {
 	}
 }
 
+class boss extends enemy {
+	initThunderchild(){
+		this.health = 100;
+		this.bossStates = {
+			NORMAL: 0,
+			FASTSHOOTING: 1,
+			FASTMOVING: 2,
+			FINALSTAGE: 3
+		};
+		this.bossState = this.bossStates.NORMAL;
+		this.TCShootTimeInit = Date.now();
+		this.TCShootTimer = 0;
+		this.direction = 1;
+		this.ammo = [];
+	}
+	
+	bossStages(){
+		this.TCShootTimer = (Date.now() - this.TCShootTimeInit)/1000;
+		switch (this.bossState) {
+			case this.bossStates.NORMAL:
+			if (this.TCShootTimer >= 0.5) {
+				this.ammo.push(new enemy(this.x, this.y, ASSET_PATH + "Ammo.png", 0, 0.5, 10, 10));
+				this.ammo[this.ammo.length - 1].setType("ammo");
+				this.TCShootTimeInit = Date.now();
+				this.TCShootTimer = 0;
+			}
+			this.vX = 0.5;
+			break;
+			
+			case this.bossStates.FASTSHOOTING:
+			if(this.TCShootTimer >= 0.25) {
+				this.ammo.push(new enemy(this.x, this.y, ASSET_PATH + "Ammo.png", 0, 0.5, 10, 10));
+				this.ammo[this.ammo.length - 1].setType("ammo");
+				this.TCShootTimeInit = Date.now();
+				this.TCShootTimer = 0;
+			}
+			this.vX = 0.5;
+			break;
+			
+			case this.bossStates.FASTMOVING:
+			if (this.TCShootTimer >= 0.5) {
+				this.ammo.push(new enemy(this.x, this.y, ASSET_PATH + "Ammo.png", 0, 0.5, 10, 10));
+				this.ammo[this.ammo.length - 1].setType("ammo");
+				this.TCShootTimeInit = Date.now();
+				this.TCShootTimer = 0;
+			}
+			this.vX = 0.75;
+			break;
+			
+			case this.bossStates.FINALSTAGE:
+			if(this.TCShootTimer >= 0.25) {
+				this.ammo.push(new enemy(this.x, this.y, ASSET_PATH + "Ammo.png", 0, 0.5, 10, 10));
+				this.ammo[this.ammo.length - 1].setType("ammo");
+				this.TCShootTimeInit = Date.now();
+				this.TCShootTimer = 0;
+			}
+			this.vX = 0.75;
+			break;
+		}
+	}
+	
+	updateDirection() {
+		if(this.getX() <= 10 || this.getX() >= canvas.width - 50){
+			this.direction *= -1;
+		}
+	}
+	
+	shoot(){
+		for(var i = 0; i < this.ammo.length; i++) {
+			this.ammo[i].render();
+		}
+	}
+	
+	updateStage() {
+		switch(this.health) {
+			case 75:
+			this.bossState = this.bossStates.FASTSHOOTING;
+			break;
+			
+			case 50:
+			this.bossState = this.bossStates.FASTMOVING;
+			break
+			
+			case 25:
+			this.bossState = this.bossStates.FINALSTAGE;
+			break;
+			
+			case 0:
+			gameState = gameStates.WINSCREEN;
+			break;
+		}
+	}
+	
+	updateAmmo() {
+ 	for(var i = 0; i < this.ammo.length; i++) {
+		hmsThunderchild.ammo[i].y += this.ammo[i].vY; 
+		if(fightingMachine.distance(this.ammo[i])) {
+			fightingMachine.health--;
+			this.ammo[i].x = -Infinity;
+			this.ammo[i].y = -Infinity;
+			this.ammo[i].vX = 0;
+			this.ammo[i].vY = 0;
+			if(fightingMachine.health <= 0){
+				causeOfDeath = "the Thunderchild";
+				gameState = gameStates.GAMEOVER;
+			}
+		}
+	} 
+	}
+}
+
 // game objects
 var bckgrnd;
 var fightingMachine;
@@ -200,6 +325,8 @@ var artillery = [];
 var bullets = [];
 var gameOverScreen;
 var thunderchildBay;
+var hmsThunderchild;
+var TCAmmo = [];
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
@@ -260,6 +387,9 @@ function init(){
 		gameOverScreen = new background(0, 0, ASSET_PATH + "gameOver.png", 0, 0, canvas.width, canvas.height);
 		thunderchildBay = new background(0, -canvas.height, ASSET_PATH + "thunderchildbay.png", 0, 0.5, canvas.width, canvas.height);
 		
+		hmsThunderchild = new boss(canvas.width/2, -canvas.height, ASSET_PATH + "thunderchild.png", 0.5, 0.5, 32, 32);
+		hmsThunderchild.initThunderchild();
+		hmsThunderchild.setType("boss");
 		
 		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		startButton.setTag("start");
@@ -311,7 +441,7 @@ function gameLoop(){
 		break;
 	
 		case gameStates.WINSCREEN:
-	
+		
 		break;
 	
 		default:
@@ -380,6 +510,7 @@ function renderGameOver() {
 }
 
 function renderThunderchild(_delta) {
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
 	travel += _delta * bckgrnd.vY;
 	if(travel > bckgrnd.H) {
 		travel = 0;
@@ -391,9 +522,12 @@ function renderThunderchild(_delta) {
 	}
 	
 	thunderchildBay.render();
+	hmsThunderchild.render();
+	hmsThunderchild.shoot();
 	
 	renderHeatRay();
 	fightingMachine.render();
+	fightingMachine.renderHealth();
 }
 
 function update(_delta){
@@ -466,7 +600,15 @@ function update(_delta){
 function updateThunderchild(_delta) {
 	if(thunderchildBay.y >= 0) {
 		thunderchildBay.vY = 0;
+		hmsThunderchild.vY = 0;
 	}
+	
+	hmsThunderchild.updateDirection();
+	hmsThunderchild.bossStages();
+	hmsThunderchild.updateAmmo();
+	
+	hmsThunderchild.y += hmsThunderchild.vY;
+	hmsThunderchild.x += hmsThunderchild.vX * hmsThunderchild.direction;
 	
 	thunderchildBay.y += thunderchildBay.vY;
 }
@@ -495,6 +637,13 @@ function touchDown(evt){
 	}
 	for(var i = 0; i < artillery.length; i++) {
 		artillery[i].die();
+	}
+	if (gameState == gameStates.BOSSSTAGE) {
+		for(var i = 0; i < hmsThunderchild.ammo.length; i++) {
+			hmsThunderchild.ammo[i].die();
+		}
+		
+		hmsThunderchild.die();
 	}
 	switch(gameState) {
 		case gameStates.MAINMENU:
