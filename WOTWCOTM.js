@@ -91,7 +91,14 @@ class button extends aSprite{
 				diseaseInitTimer = Date.now();
 				fightingMachine.health = 3;
 				score = 0;
+				ulla.play();
 				gameState = gameStates.INGAME;
+			}
+			break;
+			
+			case "restart":
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
+				window.location.reload(false);
 			}
 			break;
 			
@@ -197,6 +204,7 @@ class artilleryClass extends enemy {
 				break;
 			}
 			bullets.push(new aSprite(this.getX(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10));
+			boom.play();
 			this.shootTimer = 0;
 			this.shootTimeStart = Date.now();
 		}
@@ -228,6 +236,7 @@ class boss extends enemy {
 				this.ammo[this.ammo.length - 1].setType("ammo");
 				this.TCShootTimeInit = Date.now();
 				this.TCShootTimer = 0;
+				boom.play();
 			}
 			this.vX = 0.5;
 			break;
@@ -238,6 +247,7 @@ class boss extends enemy {
 				this.ammo[this.ammo.length - 1].setType("ammo");
 				this.TCShootTimeInit = Date.now();
 				this.TCShootTimer = 0;
+				boom.play();
 			}
 			this.vX = 0.5;
 			break;
@@ -248,6 +258,7 @@ class boss extends enemy {
 				this.ammo[this.ammo.length - 1].setType("ammo");
 				this.TCShootTimeInit = Date.now();
 				this.TCShootTimer = 0;
+				boom.play();
 			}
 			this.vX = 0.75;
 			break;
@@ -258,6 +269,7 @@ class boss extends enemy {
 				this.ammo[this.ammo.length - 1].setType("ammo");
 				this.TCShootTimeInit = Date.now();
 				this.TCShootTimer = 0;
+				boom.play();
 			}
 			this.vX = 0.75;
 			break;
@@ -291,6 +303,7 @@ class boss extends enemy {
 			break;
 			
 			case 0:
+			ulla.play();
 			gameState = gameStates.WINSCREEN;
 			break;
 		}
@@ -327,10 +340,13 @@ var gameOverScreen;
 var thunderchildBay;
 var hmsThunderchild;
 var TCAmmo = [];
+var winScreen;
+var restartButton;
 
 //Directory paths
 var ASSET_PATH = "Sprites/";
 var HUMAN_SPRITE_PATH = "Sprites/Humans/humansSkin"
+var AUDIO_PATH = "Audio/";
 
 //game variables
 var frameTime;
@@ -359,6 +375,11 @@ var gameStates = {
 };
 var gameState = gameStates.MAINMENU;
 
+var bckgMuisc;
+var ulla;
+var boom;
+var heatRaySound;
+
 function load(){
 	canvas = document.getElementById('gameCanvas');
 	canvasContext = canvas.getContext('2d');
@@ -386,6 +407,7 @@ function init(){
 		mainMenu = new background(0, 0, ASSET_PATH + "startScreen.png", 0, 0, canvas.width, canvas.height);
 		gameOverScreen = new background(0, 0, ASSET_PATH + "gameOver.png", 0, 0, canvas.width, canvas.height);
 		thunderchildBay = new background(0, -canvas.height, ASSET_PATH + "thunderchildbay.png", 0, 0.5, canvas.width, canvas.height);
+		winScreen = new background(0, 0, ASSET_PATH + "WinScreen.png", 0, 0, canvas.width, canvas.height);
 		
 		hmsThunderchild = new boss(canvas.width/2, -canvas.height, ASSET_PATH + "thunderchild.png", 0.5, 0.5, 32, 32);
 		hmsThunderchild.initThunderchild();
@@ -393,6 +415,8 @@ function init(){
 		
 		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		startButton.setTag("start");
+		restartButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
+		restartButton.setTag("restart");
 		
 		fightingMachine = new player(canvas.width/2 - 30, 90, ASSET_PATH + "FightingMachine.png", 0, 0, 60, 60);
 		fightingMachine.initPlayer();
@@ -400,6 +424,19 @@ function init(){
 		playerHealth[0] = new aSprite(canvas.width - 32, 10, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
 		playerHealth[1] = new aSprite(canvas.width - 32, 43, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
 		playerHealth[2] = new aSprite(canvas.width - 32, 75, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
+		
+		bckgMuisc = document.createElement("AUDIO");
+		bckgMuisc.src = "Audio/POL-no-way-out-short.wav";
+		bckgMuisc.loop = true;
+		bckgMuisc.volume = 0.5;
+		bckgMuisc.play();
+		
+		ulla = document.createElement("AUDIO");
+		ulla.src = "Audio/Ulla SFX (Jeff Wayne's War of the Worlds).wav";
+		boom = document.createElement("AUDIO");
+		boom.src = "Audio/cannon.wav";
+		heatRaySound = document.createElement("AUDIO");
+		heatRaySound.src = "Audio/heatRay.wav";
 		
 		frameTime = Date.now();
 		gameLoop();
@@ -441,7 +478,7 @@ function gameLoop(){
 		break;
 	
 		case gameStates.WINSCREEN:
-		
+		renderWinScreen();
 		break;
 	
 		default:
@@ -483,6 +520,7 @@ function renderHeatRay(){
 		canvasContext.moveTo(fightingMachine.getX() + 29, fightingMachine.getY() + 10);
 		canvasContext.lineTo(mouseX, mouseY);
 		canvasContext.stroke();
+		heatRaySound.play();
 		heatRay = false;
 	}
 }
@@ -507,6 +545,16 @@ function renderGameOver() {
 	canvasContext.fillText("Score: " + score, 20, 55); 
 	startButton.render();
 	canvasContext.fillText("Replay", startButton.getX() + 5, startButton.getY() + 15.5);
+}
+
+function renderWinScreen() {
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+	winScreen.render();
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
+	canvasContext.fillText("The Earth belongs to the Martians", 20, 10);
+	restartButton.render();
+	canvasContext.fillText("Restart", startButton.getX() + 5, startButton.getY() + 15.5); 
+	
 }
 
 function renderThunderchild(_delta) {
@@ -651,6 +699,9 @@ function touchDown(evt){
 		break;
 		case gameStates.GAMEOVER:
 		startButton.pressed();
+		break;
+		case gameStates.WINSCREEN:
+		restartButton.pressed();
 		break;
 	}
     touchXY(evt);
