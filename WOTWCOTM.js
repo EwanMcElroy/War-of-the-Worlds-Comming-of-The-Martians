@@ -428,7 +428,7 @@ function init(){
 		bckgMuisc = document.createElement("AUDIO");
 		bckgMuisc.src = "Audio/POL-no-way-out-short.wav";
 		bckgMuisc.loop = true;
-		bckgMuisc.volume = 0.5;
+		bckgMuisc.volume = 0.25;
 		bckgMuisc.play();
 		
 		ulla = document.createElement("AUDIO");
