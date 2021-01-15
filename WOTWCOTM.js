@@ -56,6 +56,7 @@ class aSprite {
 }
 
 class background extends aSprite {
+	// moves background down 
 	scrollDwn(_delta) {
         canvasContext.save();
         canvasContext.translate(0 , _delta);
@@ -72,7 +73,7 @@ class player extends aSprite {
 	
 	renderHealth() {
 		for(var i = 0; i < this.health; i++){
-			playerHealth[i].render();
+			playerHealth[i].render(); // display player health
 		}
 	}
 }
@@ -85,7 +86,7 @@ class button extends aSprite{
 	pressed() {
 		switch (this.tag) {
 			case "start":
-			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
+			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){ // restart the game
 				humanInitSpawnTime = Date.now();
 				artilleryInitSpawnTime = Date.now();
 				diseaseInitTimer = Date.now();
@@ -98,7 +99,7 @@ class button extends aSprite{
 			
 			case "restart":
 			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H){
-				window.location.reload(false);
+				window.location.reload(false); // reload the web page
 			}
 			break;
 			
@@ -126,7 +127,7 @@ class enemy extends aSprite{
 				this.x = -Infinity;
 				this.y = -Infinity;
 				this.vX = 0;
-				this.vY = 0;
+				this.vY = 0; // kill player
 			}
 			break;
 			case "artillery":
@@ -137,7 +138,7 @@ class enemy extends aSprite{
 					this.x = -Infinity;
 					this.y = -Infinity;
 					this.vX = 0;
-					this.vY = 0;
+					this.vY = 0; // kil artillery
 				}
 			}
 			case "boss":
@@ -150,8 +151,8 @@ class enemy extends aSprite{
 			if(mouseX > this.getX() && mouseX < this.getX() + this.W && mouseY > this.getY() && mouseY < this.getY() + this.H && mouseY < 90) {
 				this.x = -Infinity;
 				this.y = -Infinity;
-				this.vX = 0;
-				this.vY = 0;
+				this.vX = 0; 
+				this.vY = 0;// destroy thunderchild shots
 			}
 		}
 	}
@@ -160,10 +161,10 @@ class enemy extends aSprite{
 class human extends enemy {
 	setYVel(){
 		var direction = Math.round((Math.random()* 2) + 1);
-		if (direction == 1) {
+		if (direction == 1) { 
 			this.vY = Math.random() - 0.5;
 		} else {
-			this.vY =((Math.random() - 0.5) * -1);
+			this.vY =((Math.random() - 0.5) * -1); // get a random direction
 		}
 	}
 }
@@ -179,13 +180,13 @@ class artilleryClass extends enemy {
 	stopMoving() {
 		if(this.y > 60) {
 			this.vY = 0;
-			this.moving = false;
+			this.moving = false; // stop moving
 		}
 	}
 	
 	renderShootBar() {
 		canvasContext.fillStyle = 'Red';
-		canvasContext.fillRect(this.getX(), this.getY() - 10, this.shootTimer * 5, 2.5);
+		canvasContext.fillRect(this.getX(), this.getY() - 10, this.shootTimer * 5, 2.5); // draw power bar
 	}
 
 	shootCalc() {
@@ -202,10 +203,10 @@ class artilleryClass extends enemy {
 				case 75 * 3:
 				xVel = -0.75;
 				break;
-			}
-			bullets.push(new aSprite(this.getX(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10));
-			boom.play();
-			this.shootTimer = 0;
+			} // calulate x velocity
+			bullets.push(new aSprite(this.getX(), this.getY() + 2, ASSET_PATH + "Ammo.png", xVel, 0.5, 10, 10)); // shoot
+			boom.play();//play audio 
+			this.shootTimer = 0; // reset timers
 			this.shootTimeStart = Date.now();
 		}
 	}
@@ -272,23 +273,25 @@ class boss extends enemy {
 				boom.play();
 			}
 			this.vX = 0.75;
-			break;
+			break; 
+			
+			// shoot depending on boss stage and reset timer
 		}
 	}
 	
 	updateDirection() {
 		if(this.getX() <= 10 || this.getX() >= canvas.width - 50){
-			this.direction *= -1;
+			this.direction *= -1; // update direction
 		}
 	}
 	
 	shoot(){
 		for(var i = 0; i < this.ammo.length; i++) {
-			this.ammo[i].render();
+			this.ammo[i].render(); // render ammo
 		}
 	}
 	
-	updateStage() {
+	updateStage() { // update boss stage
 		switch(this.health) {
 			case 75:
 			this.bossState = this.bossStates.FASTSHOOTING;
@@ -309,7 +312,7 @@ class boss extends enemy {
 		}
 	}
 	
-	updateAmmo() {
+	updateAmmo() { // move shots and calulate collisions
  	for(var i = 0; i < this.ammo.length; i++) {
 		hmsThunderchild.ammo[i].y += this.ammo[i].vY; 
 		if(fightingMachine.distance(this.ammo[i])) {
@@ -381,19 +384,20 @@ var boom;
 var heatRaySound;
 
 function load(){
-	canvas = document.getElementById('gameCanvas');
-	canvasContext = canvas.getContext('2d');
+	canvas = document.getElementById('gameCanvas'); // get canvas
+	canvasContext = canvas.getContext('2d'); // get canvas context
 	init();
 }
 
-function resizeCanvas(){
+function resizeCanvas(){ // set canvas to screen size
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 
 function init(){
 	if(canvas.getContext) {
-		window.addEventListener('resize', resizeCanvas, false);
+		// event listeners
+		window.addEventListener('resize', resizeCanvas, false); 
         window.addEventListener('orientationchange', resizeCanvas, false);
 		
 		canvas.addEventListener("touchstart", touchDown, false);
@@ -403,28 +407,34 @@ function init(){
 
         document.addEventListener("touchcancel", touchUp, false);
 		
+		// backgrounds
 		bckgrnd = new background(0, 0, ASSET_PATH + "Background.png", 0, 50, canvas.width, canvas.height);
 		mainMenu = new background(0, 0, ASSET_PATH + "startScreen.png", 0, 0, canvas.width, canvas.height);
 		gameOverScreen = new background(0, 0, ASSET_PATH + "gameOver.png", 0, 0, canvas.width, canvas.height);
 		thunderchildBay = new background(0, -canvas.height, ASSET_PATH + "thunderchildbay.png", 0, 0.5, canvas.width, canvas.height);
 		winScreen = new background(0, 0, ASSET_PATH + "WinScreen.png", 0, 0, canvas.width, canvas.height);
 		
+		// boss
 		hmsThunderchild = new boss(canvas.width/2, -canvas.height, ASSET_PATH + "thunderchild.png", 0.5, 0.5, 32, 32);
 		hmsThunderchild.initThunderchild();
 		hmsThunderchild.setType("boss");
 		
+		// buttons
 		startButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		startButton.setTag("start");
 		restartButton = new button(20, 60, ASSET_PATH + "startbuttonO.png", 0, 0, 60, 30);
 		restartButton.setTag("restart");
 		
+		//player
 		fightingMachine = new player(canvas.width/2 - 30, 90, ASSET_PATH + "FightingMachine.png", 0, 0, 60, 60);
 		fightingMachine.initPlayer();
 		
+		// health icons
 		playerHealth[0] = new aSprite(canvas.width - 32, 10, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
 		playerHealth[1] = new aSprite(canvas.width - 32, 43, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
 		playerHealth[2] = new aSprite(canvas.width - 32, 75, ASSET_PATH + "FightingMachine.png", 0, 0, 32, 32);
 		
+		// audio
 		bckgMuisc = document.createElement("AUDIO");
 		bckgMuisc.src = "Audio/POL-no-way-out-short.wav";
 		bckgMuisc.loop = true;
@@ -438,13 +448,13 @@ function init(){
 		heatRaySound = document.createElement("AUDIO");
 		heatRaySound.src = "Audio/heatRay.wav";
 		
-		frameTime = Date.now();
-		gameLoop();
+		frameTime = Date.now(); // first frame time
+		gameLoop(); // initialise game loop
 	}
 }
 
 function gameLoop(){
-	delta = (Date.now() - frameTime)/1000;
+	delta = (Date.now() - frameTime)/1000; // calulate delta time
 	switch(gameState){
 		case gameStates.MAINMENU:
 		renderMainMenu();
@@ -454,13 +464,13 @@ function gameLoop(){
 		update(delta);
 		render(delta);
 		frameTime = Date.now();
-		diseaseCounter = (Date.now() - diseaseInitTimer)/1000;
+		diseaseCounter = (Date.now() - diseaseInitTimer)/1000; // calulate time for death
 		if (diseaseCounter > 60) {
 			causeOfDeath = "disease";
-			gameState = gameStates.GAMEOVER;
+			gameState = gameStates.GAMEOVER; // game over
 		}
 		if(score >= 300) {
-			gameState = gameStates.BOSSSTAGE;
+			gameState = gameStates.BOSSSTAGE; // switch to boss stage
 		}
 		break;
 	
@@ -485,34 +495,44 @@ function gameLoop(){
 		console.log("LOOP ERROR");
 		break;
 	}
-	requestAnimationFrame(gameLoop);
+	requestAnimationFrame(gameLoop); // recall game loop
 }
 
 function render(_delta) {
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height); // clear screen
 	
-	travel += _delta * bckgrnd.vY;
-	if(travel > bckgrnd.H) {
-		travel = 0;
+	travel += _delta * bckgrnd.vY; // update travel
+	if(travel > bckgrnd.H) { 
+		travel = 0; // reset travel
 	}
-	bckgrnd.scrollDwn(travel);
+	bckgrnd.scrollDwn(travel); // scroll the game background
 	
+	//draw score
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
+	canvasContext.fillText(score, 15, 20);
+	
+	// draw artilley and thier power bars
 	for(var i = 0; i < artillery.length; i++){
 		artillery[i].render();
 		artillery[i].renderShootBar();
 	}
+	
+	// draw bullets
 	for (var i = 0; i < bullets.length; i++) {
 		bullets[i].render();
 	}
+	// render humans
 	for (var i = 0; i < humans.length; i++){
 		humans[i].render();
 	}
+	// render fighting machine and heat ray
 	renderHeatRay();
 	fightingMachine.render();
 	fightingMachine.renderHealth();
 }
 
 function renderHeatRay(){
+	// draw line to mouse
 	if(heatRay && mouseY < fightingMachine.getY() + 10){
 		canvasContext.strokeStyle = 'red';
 		canvasContext.lineWidth = 1;
@@ -526,65 +546,67 @@ function renderHeatRay(){
 }
 
 function renderMainMenu(){
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-	mainMenu.render();
-	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
-	canvasContext.fillText("The War of the Worlds", 20, 10);
-	canvasContext.fillText("The Coming of the Martians", 20, 30);
-	startButton.render();
-	canvasContext.fillText("Start", startButton.getX() + 10, startButton.getY() + 15.5);
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height); // clear screen
+	mainMenu.render();// render main menu screen
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle'); // configure text
+	canvasContext.fillText("The War of the Worlds", 20, 10); // draw title
+	canvasContext.fillText("The Coming of the Martians", 20, 30); // draw subtitle
+	startButton.render(); // render start button
+	canvasContext.fillText("Start", startButton.getX() + 10, startButton.getY() + 15.5); // render button text
 }
 
 function renderGameOver() {
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-	gameOverScreen.render();
-	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
-	canvasContext.fillText("Game Over", 20, 10);
-	canvasContext.fillText("You have been killed by", 20, 25);
-	canvasContext.fillText(causeOfDeath, 20, 40);
-	canvasContext.fillText("Score: " + score, 20, 55); 
-	startButton.render();
-	canvasContext.fillText("Replay", startButton.getX() + 5, startButton.getY() + 15.5);
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height); // clear screen
+	gameOverScreen.render(); // render game over screen
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle'); // configure text
+	canvasContext.fillText("Game Over", 20, 10); // render game over
+	canvasContext.fillText("You have been killed by", 20, 25); // render text
+	canvasContext.fillText(causeOfDeath, 20, 40); // render cause of death
+	canvasContext.fillText("Score: " + score, 20, 55); // render score
+	startButton.render(); // render buton
+	canvasContext.fillText("Replay", startButton.getX() + 5, startButton.getY() + 15.5); // render button text
 }
 
 function renderWinScreen() {
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-	winScreen.render();
-	styleText('black', "italic bold 15px arial,serif", 'left', 'middle');
-	canvasContext.fillText("The Earth belongs to the Martians", 20, 10);
-	restartButton.render();
-	canvasContext.fillText("Restart", startButton.getX() + 5, startButton.getY() + 15.5); 
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height); // clear screen
+	winScreen.render(); // render win screen
+	styleText('black', "italic bold 15px arial,serif", 'left', 'middle'); // configure text
+	canvasContext.fillText("The Earth belongs to the Martians", 20, 10); // render text
+	restartButton.render(); // render button
+	canvasContext.fillText("Restart", startButton.getX() + 5, startButton.getY() + 15.5); // render button text 
 	
 }
 
 function renderThunderchild(_delta) {
-	canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-	travel += _delta * bckgrnd.vY;
+	canvasContext.clearRect(0, 0, canvas.width, canvas.height); // clear screen
+	travel += _delta * bckgrnd.vY; // update travel
 	if(travel > bckgrnd.H) {
 		travel = 0;
-	}
+	} // reset travel
 	if(thunderchildBay.y <= -0.1) {
 		bckgrnd.scrollDwn(travel);
 	} else {
 		bckgrnd.render();
-	}
+	} // decide wheter to scroll or just render background
 	
+	// render thunderchild, boss background and boss shots
 	thunderchildBay.render();
 	hmsThunderchild.render();
 	hmsThunderchild.shoot();
 	
+	// render fighting machine, heat ray and health
 	renderHeatRay();
 	fightingMachine.render();
 	fightingMachine.renderHealth();
 }
 
 function update(_delta){
-	humanCounter = (Date.now() - humanInitSpawnTime)/1000;
-	artilleryCounter = (Date.now() - artilleryInitSpawnTime)/1000;
-	if(humanCounter >= 0.75){
+	humanCounter = (Date.now() - humanInitSpawnTime)/1000; // add to counter
+	artilleryCounter = (Date.now() - artilleryInitSpawnTime)/1000; // add to counter
+	if(humanCounter >= 0.75){ // if timer has elapsed
 		
-		var side = Math.round((Math.random() * 2) + 1);
-		var skin = Math.round(Math.random() * numSkins + 1);
+		var side = Math.round((Math.random() * 2) + 1); // get a side to spawn on
+		var skin = Math.round(Math.random() * numSkins + 1); // get a random skin
 		while (skin < 1 || skin > numSkins) {
 			skin = Math.round(Math.random() * numSkins + 1);
 		}
@@ -595,24 +617,27 @@ function update(_delta){
 		} else {
 			humans.push(new human(canvas.width + 10, (Math.random() * 90) + 1, HUMAN_SPRITE_PATH + skin.toString() + ".png", -0.5, 0, 10, 10));
 		}
+		// spawn human on appropriate side
 		
-		humans[humans.length - 1].setType("human");
-		humans[humans.length - 1].setTag("h" + humans.length);
-		humans[humans.length - 1].setYVel();
+		humans[humans.length - 1].setType("human"); // set type
+		humans[humans.length - 1].setTag("h" + humans.length); // set tag
+		humans[humans.length - 1].setYVel(); // get random y velocity
 		
+		// reset timer
 		humanCounter = 0;
 		humanInitSpawnTime = Date.now();
 	}
 	
-	if(artilleryCounter >= 5) {
+	if(artilleryCounter >= 5) { // if timer has elapsed
 
 		for(var i = 1; i < 4; i++){
 			artillery.push(new artilleryClass(i * 75, -10, ASSET_PATH + "artillery.png", 0, 0.5, 20, 15));
 			artillery[artillery.length - 1].initArtillery();
 			artillery[artillery.length - 1].setType("artillery");
 			artillery[artillery.length - 1].setTag("a" + artillery.length);
-		}
+		} // spawn 3 artiller
 		
+		// reset timer
 		artilleryCounter = 0;
 		artilleryInitSpawnTime = Date.now();
 	}
@@ -621,7 +646,8 @@ function update(_delta){
 		artillery[i].y += artillery[i].vY;
 		artillery[i].stopMoving(); 
 		artillery[i].shootCalc();
-	}
+	} // update position of artillery
+	
 	
 	for (var i = 0; i < bullets.length; i++) {
 		bullets[i].x += bullets[i].vX;
@@ -637,31 +663,33 @@ function update(_delta){
 				gameState = gameStates.GAMEOVER;
 			}
 		}
-	}
+	} // uipdate positions of bullets and calulate if the player has been hit
 	
 	for(var i = 0; i < humans.length; i++){
 		humans[i].x += humans[i].vX;
 		humans[i].y += humans[i].vY;
-	}
+	} // update human positions
 }
 
 function updateThunderchild(_delta) {
 	if(thunderchildBay.y >= 0) {
 		thunderchildBay.vY = 0;
 		hmsThunderchild.vY = 0;
-	}
+	} // calulate when to stop moving
 	
-	hmsThunderchild.updateDirection();
-	hmsThunderchild.bossStages();
-	hmsThunderchild.updateAmmo();
+	hmsThunderchild.updateDirection(); // update direction
+	hmsThunderchild.bossStages(); // update stage
+	hmsThunderchild.updateAmmo(); // move ammo
 	
+	// move thunderchild
 	hmsThunderchild.y += hmsThunderchild.vY;
 	hmsThunderchild.x += hmsThunderchild.vX * hmsThunderchild.direction;
 	
+	// move background
 	thunderchildBay.y += thunderchildBay.vY;
 }
 
-function styleText (_colour, _font, _Align, _baseline) {
+function styleText (_colour, _font, _Align, _baseline) { // configure text
 	canvasContext.fillStyle = _colour;
 	canvasContext.font = _font;
 	canvasContext.textAlign = _Align;
@@ -681,17 +709,17 @@ function touchDown(evt){
 	mouseY = canvas.relMouseCoords(evt).y;
 	
 	for(var i = 0; i < humans.length; i++) {
-		humans[i].die();
+		humans[i].die(); // calulate if humans have been shot
 	}
 	for(var i = 0; i < artillery.length; i++) {
-		artillery[i].die();
+		artillery[i].die(); // calulate if artillery have been shot
 	}
 	if (gameState == gameStates.BOSSSTAGE) {
 		for(var i = 0; i < hmsThunderchild.ammo.length; i++) {
-			hmsThunderchild.ammo[i].die();
+			hmsThunderchild.ammo[i].die(); // calulate if the thunderchild's bullets ahve been shot
 		}
 		
-		hmsThunderchild.die();
+		hmsThunderchild.die(); // calculate if the thunderchild has been shot
 	}
 	switch(gameState) {
 		case gameStates.MAINMENU:
@@ -703,7 +731,7 @@ function touchDown(evt){
 		case gameStates.WINSCREEN:
 		restartButton.pressed();
 		break;
-	}
+	} // button presses
     touchXY(evt);
 }
 
