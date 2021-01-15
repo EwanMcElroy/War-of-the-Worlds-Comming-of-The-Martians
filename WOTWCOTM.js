@@ -455,11 +455,11 @@ function gameLoop(){
 		render(delta);
 		frameTime = Date.now();
 		diseaseCounter = (Date.now() - diseaseInitTimer)/1000;
-		if (diseaseCounter > 20) {
+		if (diseaseCounter > 60) {
 			causeOfDeath = "disease";
 			gameState = gameStates.GAMEOVER;
 		}
-		if(score >= 25) {
+		if(score >= 300) {
 			gameState = gameStates.BOSSSTAGE;
 		}
 		break;
